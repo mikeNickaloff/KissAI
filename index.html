@@ -160,29 +160,12 @@ function FindAttributes(thingId) {
     return mapContainer(t_inheritedWords, FindAttributes)
 }
 
-function FindComponents(thingId) {
+ function FindComponents(thingId) {
     var t_inheritedWords = things[thingId].FindComponentWords(things);
-    var t_inheritedIds = t_inheritedWords.map(function(word) {
-        return things.find(function(thing) {
-            return thing.Word === word;
-        }).Id;
-    });
-    var returnArray = [];
-    for (var i = 0; i < t_inheritedIds.length; i++) {
-        var t_inheritedId = t_inheritedIds[i];
-        if (returnArray.indexOf(t_inheritedId) === -1) {
-            returnArray.push(t_inheritedId);
-        }
-        var t_inheritedAttributes = FindComponents(t_inheritedId);
-        for (var j = 0; j < t_inheritedAttributes.length; j++) {
-            var t_inheritedAttribute = t_inheritedAttributes[j];
-            if (returnArray.indexOf(t_inheritedAttribute) === -1) {
-                returnArray.push(t_inheritedAttribute);
-            }
-        }
-    }
-    return returnArray;
+    return mapContainer(t_inheritedWords, FindComponents)
 }
+
+
 
 function CreateThing(word) {
     var thing = things.find(function(thing) {
