@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script>var test;
+        <script>
+          var test;
 var test2;
 var thingGlobalCount = 0;
 
@@ -43,15 +44,17 @@ function Thing(id, actionIds, inheritsIds, word) {
     };
 
     this.FindDescendantsWithComponent = function(componentWord) {
-      var rv = this.Components.filter(function(c) { return c.Word == componentWord.toLowerCase() })
-      this.Components.forEach(function(c) {
-        rv.concat(
-          c.FindDescendantsWithComponent(componentWord).filter(
-            function(o) { 
-              return rv.indexOf(o) == -1
-            }).flat()
-        )
-      });
+        var rv = this.Components.filter(function(c) {
+            return c.Word == componentWord.toLowerCase()
+        })
+        this.Components.forEach(function(c) {
+            rv.concat(
+                c.FindDescendantsWithComponent(componentWord).filter(
+                    function(o) {
+                        return rv.indexOf(o) == -1
+                    }).flat()
+            )
+        });
         return rv;
     };
     this.FindComponentWords = function(things) {
@@ -93,24 +96,27 @@ function Thing(id, actionIds, inheritsIds, word) {
         return null;
     };
     this.AddComponent = function(word) {
-      var newThing = new Thing(Thing.NextId, [], [], word.toLowerCase());
-      this.Components.push(newThing);
-      return newThing;
+        var newThing = new Thing(Thing.NextId, [], [], word.toLowerCase());
+        this.Components.push(newThing);
+        return newThing;
     };
-    
+
 }
 var FindFirstComponent = function(things, word) {
-      for (var i = 0; i < things.length; i++) {
+    for (var i = 0; i < things.length; i++) {
         var thing = things[i];
-        if (thing.Word == word) { return thing }
+        if (thing.Word == word) {
+            return thing
+        }
         var component = thing.FindComponent(word);
         if (component) {
-          return component;
+            return component;
         }
-      }
-      return CreateThing(word)
-      return ;
     }
+    return CreateThing(word)
+    return;
+}
+
 function IdsToWords(ids) {
     return ids.map(id => {
         return things[id].Word
@@ -152,22 +158,26 @@ function ThingsFromIds(ids) {
     }
     return returnValue;
 }
-function FindThing(word) {
-  return FindFirstComponent(things, word)
-}
-function FindThingsByWord(word, thingList = things) {
-  var arrayChildren = thingList.map(function(item){ return item.FindComponent(word)})
-  return arrayChildren.flat();
-  /*
-  for (var u=0; u<thingList.length; u++) {
-    var children = thingList[u].Components
-  arrayChildren.push(children.map(function(item){ return FindThingsByWord(word, item.Components)/// }))
-  }
-  var arrayTop = things.map(function(item){ return item.Word; })
-  var arrayAll = [arrayChildren.map(function(item){ return item.Word }).flat(), arrayTop].flat()
 
-  return arrayAll.flat().filter(function(i){ return i != [] && i != null });
-  */ 
+function FindThing(word) {
+    return FindFirstComponent(things, word)
+}
+
+function FindThingsByWord(word, thingList = things) {
+    var arrayChildren = thingList.map(function(item) {
+        return item.FindComponent(word)
+    })
+    return arrayChildren.flat();
+    /*
+    for (var u=0; u<thingList.length; u++) {
+      var children = thingList[u].Components
+    arrayChildren.push(children.map(function(item){ return FindThingsByWord(word, item.Components)/// }))
+    }
+    var arrayTop = things.map(function(item){ return item.Word; })
+    var arrayAll = [arrayChildren.map(function(item){ return item.Word }).flat(), arrayTop].flat()
+
+    return arrayAll.flat().filter(function(i){ return i != [] && i != null });
+    */
 }
 
 function AddSynonymThing(thingId1, thingId2) {
@@ -220,9 +230,9 @@ function CreateThing(word) {
     });
     if (!thing) {
         thing = new Thing(thingGlobalCount, [], [], word);
-      thingGlobalCount++;  
-      things.push(thing);
-   return thing;
+        thingGlobalCount++;
+        things.push(thing);
+        return thing;
     }
 }
 
@@ -272,55 +282,81 @@ var things = [];
   }
 */
 function GetAllPaths(thingContainer = things, curpath = "", rv = []) {
-var newrv = rv;
+    var newrv = rv;
 
-  thingContainer.forEach(function(thing) {
-  var newpath = curpath + " " + thing.Word;  
-    newrv.push(newpath);
-    newrv.concat(GetAllPaths(thing.Components, newpath, newrv))
-  })
-  return newrv;
+    thingContainer.forEach(function(thing) {
+        var newpath = curpath + " " + thing.Word;
+        newrv.push(newpath);
+        newrv.concat(GetAllPaths(thing.Components, newpath, newrv))
+    })
+    return newrv;
 }
+
+function FindThingByPath(path) {
+    var words = path.split(' ');
+    if (words.length == 0) {
+        return null
+    }
+    var cur = FindThing(words[0])
+    for (var i = 1; i < words.length; i++) {
+
+        var nt = words[i];
+        var nc = cur.FindComponent(nt);
+        if (nc == null) {
+            nc = cur.AddComponent(nt)
+        }
+        cur = nc;
+    }
+    return cur
+}
+
 function ParseText(text) {
     var words = text.split(' ');
     if (words.length < 3) {
         return 0
     }
-  var curpath = "";
-          var curlist = things;
-    for (var i = 0; i < words.length; i++) {
+    var curPath = words[0];
+    var curlist = things;
+    for (var i = 1; i < words.length; i++) {
         var word = words[i];
         if (words.length < (i + 1)) {
             return 0;
         }
-      
-      /* if (FindThingsByWord(words[i], curlist))
-        '*/
-          if ((words[i + 1] === 'are') || (words[i + 1] === 'is')) {
-            var thing1 = FindThing(word);
-            var thing2 = FindThing(words.slice(i + 2).join(' '));
-            
+
+
+        var foundOp = false;
+
+        if ((words[i] === 'are') || (words[i] === 'is')) {
+            var thing1 = FindThingByPath(curPath);
+            var thing2 = FindThingByPath(words.slice(i + 1).join(' '));
+            foundOp = true;
             InheritThing(thing1.Id, thing2.Id);
         }
 
-        if ((words[i + 1] === 'has') || (words[i + 1] === 'have')) {
-            var thing1 = FindThing(word);
-            var thing2 = words.slice(i + 2).join(' ');
-            thing1.AddComponent(thing2) 
-         // ComponentThing(thing1.Id, thing2);
+        if ((words[i] === 'has') || (words[i] === 'have')) {
+            var thing1 = FindThingByPath(curPath);
+            var thing2 = words.slice(i + 1).join(' ');
+            thing1.AddComponent(thing2)
+            foundOp = true;
+            // ComponentThing(thing1.Id, thing2);
         }
-        if (words[i + 1] === 'can') {
-            var thing1 = FindThing(word);
-            var thing2 = FindAction(words.slice(i + 2).join(' '));
+        if (words[i] === 'can') {
+            var thing1 = FindThingByPath(word);
+            var thing2 = FindAction(words.slice(i + 1).join(' '));
             ActionThing(thing1.Id, thing2.Id);
         }
 
-        if ((words[i + 1] === 'is') && (words[i + 2].match(/ing/))) {
-            var thing1 = FindThing(word);
+        /*if ((words[i] === 'is') && (words[i + 1].match(/ing/))) {
+            var thing1 = FindThingByPath(word);
             var thing2 = FindAction(words.slice(i + 2).join(" "));
             ActionThing(thing1.Id, thing2.Id);
+     foundOp = true;
+        } */
+        if (!foundOp) {
+            curPath += " " + words[i]
+        } else {
+            return 0
         }
-
     }
 }
 
@@ -340,14 +376,14 @@ Learn("animal are unpredictable. fox are small. dog are pet. cat are pet. cat ar
 Learn("chair are furniture. chair are manmade. car are machine. car are upredictable. gun are weapon. weapon are dangerous. hammer are tool. weapon are manmade")
 Learn("Furnature are inanimate. Couch are furnature. picture are decoration. decoration are furniture. furnature are manmade. plants are biological. biological are mortal. clouds are geological. Macintosh are computer. PC are computer. apple are fruit. fruit are biological. apple are edible.")
 console.log(GetAllPaths())
-          
+
 Learn("hand are bodypart. foot are bodypart. toe are bodypart. human has hand. hand has finger. finger has fingernail. human has foot. foot has toe. gun has trigger. gun has bullet. gun are metal. sword are weapon. sword are metal. sword has handle. sword has blade. blade has edge. blade are dangerous. sword are manual.")
 Learn("human has head. head has brain. head has eyes. head has nose. head has mouth. head hss ears. mouth has tongue. human has shoulders. human has arms. human hss legs. legs are bodypart. bird has wing. bird are animal. wing are bodypart. bird has beak. bird has eyes. bird has feathers.")
 Learn("internet is network. network has node. internet has client. client has ip. ip has host. client is connection. school is building. building is manmade. school has classes. school has teachers. classes have chairs. students can learn. teachers can teach. classes have students. classes have teachers. classes can start. classes can end. classes have desks. classes have clocks. classes have whiteboards. classes have doors. classes have windows.")
 Learn("student is human. teacher is human.  desk is inanimate. chair is inanimate. desk is furnature. chair is furnature. chair has legs. desk has legs. chair has seat. desk has surface. human can sit. human can stand. desk has drawer. drawer can open. drawer can close. humans can grab.")
 
-          
-  console.log(performance.now() - start)
+
+console.log(performance.now() - start)
 
 /* function FindThing(word) {
     return things[FindThingId(word)];
@@ -390,12 +426,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     Learn("horse is mammal. mammal is animal. mammal has eyes. mammal has mouth. mammal has ears.")
-    Learn("horse has legs. horse has hoof. horse has small tail.");
-    Learn("zebra is horse. zebra has stripes. zebra has mane.");
+    Learn("horse has legs. horse has hoof. horse has small tail. ");
+    Learn("zebra is horse. zebra has stripes. zebra stripes have black stripes. zebra stripes have white stripes..");
 
     console.log("zebra", describe("zebra"));
-    console.log("horse", describe("horse"), FindThing("chair"), GetAllPaths());
-    
+    console.log("horse", describe("horse"), FindThing("zebra"), GetAllPaths());
+
 
 });
         </script>
